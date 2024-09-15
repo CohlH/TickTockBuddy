@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tick Toc kBuddy</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f0e8;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .card {
+        background-color: white;
+        border: 1px solid #e6dfd3;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        position: relative;
+      }
+      .button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+      }
+      .button-primary {
+        background-color: #e6dfd3;
+        color: black;
+      }
+      .button-danger {
+        background-color: #f56565;
+        color: white;
+      }
+      .input {
+        padding: 10px;
+        border: 1px solid #e6dfd3;
+        border-radius: 4px;
+      }
+      .project-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .project-buttons {
+        display: flex;
+        gap: 10px;
+      }
+      .delete-button {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #f56565;
+      }
+      .time-input {
+        width: 60px;
+        text-align: center;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+      }
+      .footer a {
+        color: #666;
+        text-decoration: none;
+      }
+      .footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-35gbSoQs2oUIrt90GUSv8wYoJ37qi9.png"
+          alt="Elisheva Shinder Logo"
+          style="height: 96px"
+        />
+        <h1>מעקב זמן</h1>
+      </div>
+      <div class="card">
+        <h2>הוסף פרויקט חדש</h2>
+        <div style="display: flex; gap: 10px">
+          <input
+            type="text"
+            id="newProjectName"
+            class="input"
+            style="flex-grow: 1"
+            placeholder="שם הפרויקט"
+          />
+          <button onclick="addProject()" class="button button-primary">
+            הוסף פרויקט
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display: flex; align-items: center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-gray-500 ml-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            style="width: 20px; height: 20px; margin-left: 8px"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <input
+            type="text"
+            id="searchInput"
+            class="input"
+            style="flex-grow: 1"
+            placeholder="חפש פרויקטים"
+            oninput="filterProjects()"
+          />
+        </div>
+      </div>
+      <div id="projectsList"></div>
+      <div class="footer">
+        <a href="mailto:h8462600@gmail.com">חנה קול</a>
+      </div>
+    </div>
+
+    <script>
+      let projects = [];
+      let currentTime = Date.now();
+
+      function loadProjects() {
+        const storedProjects = localStorage.getItem("timeTrackerProjects");
+        if (storedProjects) {
+          projects = JSON.parse(storedProjects);
+          renderProjects();
+        }
+      }
+
+      function saveProjects() {
+        localStorage.setItem("timeTrackerProjects", JSON.stringify(projects));
+      }
+
+      function addProject() {
+        const newProjectName = document
+          .getElementById("newProjectName")
+          .value.trim();
+        if (newProjectName) {
+          projects.push({
+            id: Date.now().toString(),
+            name: newProjectName,
+            startTime: null,
+            totalTime: 0,
+            isRunning: false,
+          });
+          document.getElementById("newProjectName").value = "";
+          saveProjects();
+          renderProjects();
+        }
+      }
+
+      function startProject(id) {
+        projects = projects.map((project) =>
+          project.id === id
+            ? { ...project, startTime: Date.now(), isRunning: true }
+            : project
+        );
+        saveProjects();
+        renderProjects();
+      }
+
+      function stopProject(id) {
+        projects = projects.map((project) =>
+          project.id === id
+            ? {
+                ...project,
+                totalTime:
+                  project.totalTime +
+                  (Date.now() - (project.startTime || Date.now())),
+                startTime: null,
+                isRunning: false,
+              }
+            : project
+        );
+        saveProjects();
+        renderProjects();
+      }
+
+      function resetProject(id) {
+        projects = projects.map((project) =>
+          project.id === id
+            ? { ...project, totalTime: 0, startTime: null, isRunning: false }
+            : project
+        );
+        saveProjects();
+        renderProjects();
+      }
+
+      function addTime(id) {
+        const input = document.getElementById(`timeToAdd-${id}`);
+        const minutes = parseInt(input.value) || 0;
+        projects = projects.map((project) =>
+          project.id === id
+            ? {
+                ...project,
+                totalTime: Math.max(0, project.totalTime + minutes * 60000),
+              }
+            : project
+        );
+        input.value = "";
+        saveProjects();
+        renderProjects();
+      }
+
+      function deleteProject(id) {
+        projects = projects.filter((project) => project.id !== id);
+        saveProjects();
+        renderProjects();
+      }
+
+      function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      function filterProjects() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const filteredProjects = projects.filter((project) =>
+          project.name.toLowerCase().includes(searchTerm)
+        );
+        renderProjects(filteredProjects);
+      }
+
+      function renderProjects(projectsToRender = projects) {
+        const projectsList = document.getElementById("projectsList");
+        projectsList.innerHTML = "";
+        projectsToRender.forEach((project) => {
+          const projectCard = document.createElement("div");
+          projectCard.className = "card";
+          projectCard.innerHTML = `
+                    <button onclick="deleteProject('${
+                      project.id
+                    }')" class="delete-button" aria-label="מחק פרויקט">✕</button>
+                    <h3>${project.name}</h3>
+                    <p>זמן פעיל: ${
+                      project.isRunning
+                        ? formatTime(
+                            currentTime - (project.startTime || currentTime)
+                          )
+                        : "00:00:00"
+                    }</p>
+                    <p>סך הכל זמן: ${formatTime(project.totalTime)}</p>
+                    <div class="project-controls">
+                        <div class="project-buttons">
+                            ${
+                              project.isRunning
+                                ? `<button onclick="stopProject('${project.id}')" class="button button-danger">עצור</button>`
+                                : `<button onclick="startProject('${project.id}')" class="button button-primary">התחל</button>`
+                            }
+                            <button onclick="resetProject('${
+                              project.id
+                            }')" class="button">אפס</button>
+                        </div>
+                        <div class="project-buttons">
+                            <input type="number" id="timeToAdd-${
+                              project.id
+                            }" class="input time-input" min="0" placeholder="דקות">
+                            <button onclick="addTime('${
+                              project.id
+                            }')" class="button button-primary" ${
+            project.isRunning ? "disabled" : ""
+          }>הוסף זמן</button>
+                        </div>
+                    </div>
+                `;
+          projectsList.appendChild(projectCard);
+        });
+      }
+
+      setInterval(() => {
+        currentTime = Date.now();
+        renderProjects();
+      }, 1000);
+
+      loadProjects();
+    </script>
+  </body>
+</html>
