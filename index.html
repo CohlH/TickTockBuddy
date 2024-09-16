@@ -253,12 +253,15 @@
         .settings-content select {
             width: 100%;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div id="logoContainer">
+            <div id="logoContainer" class="hidden">
                 <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-35gbSoQs2oUIrt90GUSv8wYoJ37qi9.png" alt="Elisheva Shinder Logo" style="height: 96px;">
             </div>
             <h1>מעקב זמן</h1>
@@ -313,11 +316,11 @@
                         <option value="dark">כהה</option>
                     </select>
                 </div>
-                <div>
+                <div class="hidden">
                     <label for="logoVisibility">לוגו:</label>
                     <select id="logoVisibility" onchange="toggleLogo()" class="input">
-                        <option value="visible">מוצג</option>
                         <option value="hidden">מוסתר</option>
+                        <option value="visible">מוצג</option>
                     </select>
                 </div>
             </div>
