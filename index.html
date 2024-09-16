@@ -86,6 +86,54 @@
         .footer a:hover {
             text-decoration: underline;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .details-button {
+            background: none;
+            border: none;
+            color: #4a5568;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .reset-all-button {
+            background-color: #f56565;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -110,14 +158,22 @@
             </div>
         </div>
         <div id="projectsList"></div>
+        <button onclick="resetAllProjects()" class="reset-all-button">אפס את כל הפרויקטים</button>
         <div class="footer">
             <a href="mailto:h8462600@gmail.com">חנה קול</a>
         </div>
     </div>
 
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
     <script>
         let projects = [];
-        let currentTime = Date.now();
 
         function loadProjects() {
             const storedProjects = localStorage.getItem('timeTrackerProjects');
@@ -139,7 +195,8 @@
                     name: newProjectName,
                     startTime: null,
                     totalTime: 0,
-                    isRunning: false
+                    isRunning: false,
+                    entries: []
                 });
                 document.getElementById('newProjectName').value = '';
                 saveProjects();
@@ -156,21 +213,30 @@
         }
 
         function stopProject(id) {
-            projects = projects.map(project => 
-                project.id === id ? {
-                    ...project,
-                    totalTime: project.totalTime + (Date.now() - (project.startTime || Date.now())),
-                    startTime: null,
-                    isRunning: false
-                } : project
-            );
+            projects = projects.map(project => {
+                if (project.id === id && project.isRunning) {
+                    const stopTime = Date.now();
+                    const duration = stopTime - (project.startTime || stopTime);
+                    return {
+                        ...project,
+                        totalTime: project.totalTime + duration,
+                        startTime: null,
+                        isRunning: false,
+                        entries: [
+                            ...project.entries,
+                            { type: 'auto', start: project.startTime, end: stopTime, duration: duration }
+                        ]
+                    };
+                }
+                return project;
+            });
             saveProjects();
             renderProjects();
         }
 
         function resetProject(id) {
             projects = projects.map(project => 
-                project.id === id ? { ...project, totalTime: 0, startTime: null, isRunning: false } : project
+                project.id === id ? { ...project, totalTime: 0, startTime: null, isRunning: false, entries: [] } : project
             );
             saveProjects();
             renderProjects();
@@ -179,12 +245,21 @@
         function addTime(id) {
             const input = document.getElementById(`timeToAdd-${id}`);
             const minutes = parseInt(input.value) || 0;
-            projects = projects.map(project => 
-                project.id === id ? { 
-                    ...project, 
-                    totalTime: Math.max(0, project.totalTime + minutes * 60000) 
-                } : project
-            );
+            const milliseconds = minutes * 60000;
+            projects = projects.map(project => {
+                if (project.id === id) {
+                    const now = Date.now();
+                    return { 
+                        ...project, 
+                        totalTime: project.totalTime + milliseconds,
+                        entries: [
+                            ...project.entries,
+                            { type: 'manual', timestamp: now, duration: milliseconds }
+                        ]
+                    };
+                }
+                return project;
+            });
             input.value = '';
             saveProjects();
             renderProjects();
@@ -204,6 +279,16 @@
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear().toString().slice(-2);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${day}/${month}/${year} - ${hours}:${minutes}`;
+        }
+
         function filterProjects() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const filteredProjects = projects.filter(project =>
@@ -221,8 +306,9 @@
                 projectCard.innerHTML = `
                     <button onclick="deleteProject('${project.id}')" class="delete-button" aria-label="מחק פרויקט">✕</button>
                     <h3>${project.name}</h3>
-                    <p>זמן פעיל: <span id="activeTime-${project.id}">${project.isRunning ? formatTime(currentTime - (project.startTime || currentTime)) : '00:00:00'}</span></p>
+                    <p>זמן פעיל: <span id="activeTime-${project.id}">${project.isRunning ? formatTime(Date.now() - (project.startTime || Date.now())) : '00:00:00'}</span></p>
                     <p>סך הכל זמן: <span id="totalTime-${project.id}">${formatTime(project.totalTime)}</span></p>
+                    <button class="details-button" onclick="showDetails('${project.id}')">הצג פרטים</button>
                     <div class="project-controls">
                         <div class="project-buttons">
                             ${project.isRunning 
@@ -253,6 +339,70 @@
                     totalTimeElement.textContent = formatTime(project.totalTime + (project.isRunning ? Date.now() - project.startTime : 0));
                 }
             });
+        }
+
+        function showDetails(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project) return;
+
+            const modal = document.getElementById('detailsModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+
+            modalTitle.textContent = `פרטי פרויקט: ${project.name}`;
+            
+            let content = '<table style="width:100%; border-collapse: collapse;">';
+            content += '<tr><th style="border: 1px solid #ddd; padding: 8px;">סוג</th><th style="border: 1px solid #ddd; padding: 8px;">תאריך</th><th style="border: 1px solid #ddd; padding: 8px;">משך</th></tr>';
+            
+            project.entries.forEach(entry => {
+                if (entry.type === 'auto') {
+                    content += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;">אוטומטי</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${formatDate(entry.start)} - ${formatDate(entry.end)}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${formatTime(entry.duration)}</td>
+                        </tr>
+                    `;
+                } else if (entry.type === 'manual') {
+                    content += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;">ידני</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${formatDate(entry.timestamp)}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${formatTime(entry.duration)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            content += '</table>';
+            
+            if (project.entries.length === 0) {
+                content = '<p>אין רשומות זמן לפרויקט זה.</p>';
+            }
+
+            modalContent.innerHTML = content;
+            modal.style.display = 'block';
+        }
+
+        function resetAllProjects() {
+            if (confirm('האם אתה בטוח שברצונך לאפס את כל הפרויקטים? פעולה זו תמחק את כל הנתונים.')) {
+                localStorage.removeItem('timeTrackerProjects');
+                projects = [];
+                renderProjects();
+            }
+        }
+
+        // Close modal when clicking on <span> (x)
+        document.getElementsByClassName('close')[0].onclick = function() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
         }
 
         setInterval(updateTimes, 1000);
