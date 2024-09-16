@@ -5,50 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מעקב זמן</title>
     <style>
+        :root {
+            --bg-color: #f5f0e8;
+            --text-color: #333;
+            --card-bg: white;
+            --card-border: #e6dfd3;
+            --button-primary-bg: #e6dfd3;
+            --button-primary-text: black;
+            --button-danger-bg: #f56565;
+            --button-danger-text: white;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f0e8;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
         }
+
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
         }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
+
         .card {
-            background-color: white;
-            border: 1px solid #e6dfd3;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
             position: relative;
+            transition: background-color 0.3s, border-color 0.3s;
         }
+
         .button {
             padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             margin-right: 5px;
+            transition: background-color 0.3s, color 0.3s;
         }
+
         .button-primary {
-            background-color: #e6dfd3;
-            color: black;
+            background-color: var(--button-primary-bg);
+            color: var(--button-primary-text);
         }
+
         .button-danger {
-            background-color: #f56565;
-            color: white;
+            background-color: var(--button-danger-bg);
+            color: var(--button-danger-text);
         }
+
         .input {
             padding: 10px;
-            border: 1px solid #e6dfd3;
+            border: 1px solid var(--card-border);
             border-radius: 4px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
+
         .project-controls {
             display: flex;
             justify-content: space-between;
@@ -56,10 +82,12 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+
         .project-buttons {
             display: flex;
             gap: 10px;
         }
+
         .delete-button {
             position: absolute;
             top: 10px;
@@ -68,24 +96,29 @@
             border: none;
             font-size: 20px;
             cursor: pointer;
-            color: #f56565;
+            color: var(--button-danger-bg);
         }
+
         .time-input {
             width: 60px;
             text-align: center;
         }
+
         .footer {
             text-align: center;
             margin-top: 20px;
             font-size: 12px;
         }
+
         .footer a {
-            color: #666;
+            color: var(--text-color);
             text-decoration: none;
         }
+
         .footer a:hover {
             text-decoration: underline;
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -97,50 +130,139 @@
             overflow: auto;
             background-color: rgba(0,0,0,0.4);
         }
+
         .modal-content {
-            background-color: #fefefe;
+            background-color: var(--card-bg);
             margin: 15% auto;
             padding: 20px;
-            border: 1px solid #888;
+            border: 1px solid var(--card-border);
             width: 80%;
             max-width: 600px;
             border-radius: 8px;
+            transition: background-color 0.3s, border-color 0.3s;
         }
+
         .close {
             color: #aaa;
             float: left;
             font-size: 28px;
             font-weight: bold;
         }
+
         .close:hover,
         .close:focus {
-            color: black;
+            color: var(--text-color);
             text-decoration: none;
             cursor: pointer;
         }
+
         .details-button {
             background: none;
             border: none;
-            color: #4a5568;
-            text-decoration: underline;
+            color: var(--text-color);
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
         }
+
+        .details-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .details-button svg {
+            width: 20px;
+            height: 20px;
+            margin-left: 5px;
+        }
+
         .reset-all-button {
-            background-color: #f56565;
-            color: white;
+            background-color: var(--button-danger-bg);
+            color: var(--button-danger-text);
             padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             margin-top: 20px;
         }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .compact .projects-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+
+        .compact .card {
+            padding: 15px;
+        }
+
+        .compact h3 {
+            font-size: 1.1em;
+            margin: 0 0 10px 0;
+        }
+
+        .compact p {
+            margin: 0 0 5px 0;
+            font-size: 0.9em;
+        }
+
+        .compact .project-controls {
+            justify-content: flex-start;
+        }
+
+        .compact .project-buttons {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .settings-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .dark-mode {
+            --bg-color: #1a202c;
+            --text-color: #e2e8f0;
+            --card-bg: #2d3748;
+            --card-border: #4a5568;
+            --button-primary-bg: #4a5568;
+            --button-primary-text: #e2e8f0;
+            --button-danger-bg: #e53e3e;
+            --button-danger-text: #e2e8f0;
+        }
+
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .settings-content label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .settings-content select {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-35gbSoQs2oUIrt90GUSv8wYoJ37qi9.png" alt="Elisheva Shinder Logo" style="height: 96px;">
+            <div id="logoContainer">
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-35gbSoQs2oUIrt90GUSv8wYoJ37qi9.png" alt="Elisheva Shinder Logo" style="height: 96px;">
+            </div>
             <h1>מעקב זמן</h1>
+            <button class="settings-button" onclick="openSettingsModal()">⚙️</button>
         </div>
         <div class="card">
             <h2>הוסף פרויקט חדש</h2>
@@ -157,7 +279,7 @@
                 <input type="text" id="searchInput" class="input" style="flex-grow: 1;" placeholder="חפש פרויקטים" oninput="filterProjects()">
             </div>
         </div>
-        <div id="projectsList"></div>
+        <div id="projectsList" class="projects-grid"></div>
         <button onclick="resetAllProjects()" class="reset-all-button">אפס את כל הפרויקטים</button>
         <div class="footer">
             <a href="mailto:h8462600@gmail.com">חנה קול</a>
@@ -172,8 +294,40 @@
         </div>
     </div>
 
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettingsModal()">&times;</span>
+            <h2>הגדרות</h2>
+            <div class="settings-content">
+                <div>
+                    <label for="viewMode">תצוגה:</label>
+                    <select id="viewMode" onchange="toggleViewMode()" class="input">
+                        <option value="expanded">מורחבת</option>
+                        <option value="compact">מצומצמת</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="themeMode">ערכת נושא:</label>
+                    <select id="themeMode" onchange="toggleTheme()" class="input">
+                        <option value="light">בהירה</option>
+                        <option value="dark">כהה</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="logoVisibility">לוגו:</label>
+                    <select id="logoVisibility" onchange="toggleLogo()" class="input">
+                        <option value="visible">מוצג</option>
+                        <option value="hidden">מוסתר</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let projects = [];
+        let viewMode = 'expanded';
+        let themeMode = 'light';
 
         function loadProjects() {
             const storedProjects = localStorage.getItem('timeTrackerProjects');
@@ -308,7 +462,12 @@
                     <h3>${project.name}</h3>
                     <p>זמן פעיל: <span id="activeTime-${project.id}">${project.isRunning ? formatTime(Date.now() - (project.startTime || Date.now())) : '00:00:00'}</span></p>
                     <p>סך הכל זמן: <span id="totalTime-${project.id}">${formatTime(project.totalTime)}</span></p>
-                    <button class="details-button" onclick="showDetails('${project.id}')">הצג פרטים</button>
+                    <button class="details-button" onclick="showDetails('${project.id}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        הצג פרטים
+                    </button>
                     <div class="project-controls">
                         <div class="project-buttons">
                             ${project.isRunning 
@@ -392,16 +551,42 @@
             }
         }
 
-        // Close modal when clicking on <span> (x)
-        document.getElementsByClassName('close')[0].onclick = function() {
-            document.getElementById('detailsModal').style.display = 'none';
+        function toggleViewMode() {
+            viewMode = document.getElementById('viewMode').value;
+            document.body.classList.toggle('compact', viewMode === 'compact');
+            renderProjects();
         }
+
+        function toggleTheme() {
+            themeMode = document.getElementById('themeMode').value;
+            document.body.classList.toggle('dark-mode', themeMode === 'dark');
+        }
+
+        function toggleLogo() {
+            const logoVisibility = document.getElementById('logoVisibility').value;
+            const logoContainer = document.getElementById('logoContainer');
+            logoContainer.style.display = logoVisibility === 'visible' ? 'flex' : 'none';
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'block';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // Close modal when clicking on <span> (x)
+        document.querySelectorAll('.close').forEach(closeButton => {
+            closeButton.onclick = function() {
+                this.closest('.modal').style.display = 'none';
+            }
+        });
 
         // Close modal when clicking outside of it
         window.onclick = function(event) {
-            const modal = document.getElementById('detailsModal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
             }
         }
 
